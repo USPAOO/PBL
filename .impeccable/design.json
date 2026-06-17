@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-17T00:00:00.000Z",
+  "title": "Design System: 校园二手",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Campus Sky Blue (transitional)",
+        "canonical": "oklch(58% 0.19 255)",
+        "tonalRamp": [
+          "oklch(22% 0.08 255)",
+          "oklch(32% 0.12 255)",
+          "oklch(42% 0.15 255)",
+          "oklch(52% 0.18 255)",
+          "oklch(58% 0.19 255)",
+          "oklch(68% 0.14 255)",
+          "oklch(78% 0.09 255)",
+          "oklch(92% 0.04 255)"
+        ]
+      },
+      "primary-light": {
+        "role": "primary",
+        "displayName": "Sky Wash",
+        "canonical": "oklch(95% 0.04 255)",
+        "tonalRamp": [
+          "oklch(25% 0.06 255)",
+          "oklch(35% 0.08 255)",
+          "oklch(45% 0.10 255)",
+          "oklch(55% 0.12 255)",
+          "oklch(65% 0.10 255)",
+          "oklch(75% 0.08 255)",
+          "oklch(85% 0.06 255)",
+          "oklch(95% 0.04 255)"
+        ]
+      },
+      "accent-danger": {
+        "role": "tertiary",
+        "displayName": "Deal Red",
+        "canonical": "oklch(63% 0.22 25)",
+        "tonalRamp": [
+          "oklch(25% 0.12 25)",
+          "oklch(35% 0.16 25)",
+          "oklch(45% 0.19 25)",
+          "oklch(55% 0.21 25)",
+          "oklch(63% 0.22 25)",
+          "oklch(72% 0.18 25)",
+          "oklch(82% 0.12 25)",
+          "oklch(92% 0.06 25)"
+        ]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Page Canvas",
+        "canonical": "oklch(95% 0.008 260)",
+        "tonalRamp": [
+          "oklch(18% 0.01 260)",
+          "oklch(28% 0.012 260)",
+          "oklch(38% 0.014 260)",
+          "oklch(48% 0.014 260)",
+          "oklch(58% 0.012 260)",
+          "oklch(72% 0.010 260)",
+          "oklch(85% 0.009 260)",
+          "oklch(95% 0.008 260)"
+        ]
+      },
+      "ink-primary": {
+        "role": "neutral",
+        "displayName": "Ink Primary",
+        "canonical": "oklch(22% 0.005 260)",
+        "tonalRamp": [
+          "oklch(12% 0.004 260)",
+          "oklch(18% 0.005 260)",
+          "oklch(22% 0.005 260)",
+          "oklch(32% 0.006 260)",
+          "oklch(42% 0.007 260)",
+          "oklch(55% 0.008 260)",
+          "oklch(70% 0.009 260)",
+          "oklch(88% 0.008 260)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Login title, home hero headline."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and section headers."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Forms, descriptions, chat messages."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Seller names, timestamps, status tags."
+      }
+    },
+    "shadows": [
+      {
+        "name": "header-hairline",
+        "value": "0 1px 4px rgba(0, 0, 0, 0.08)",
+        "purpose": "Sticky top navigation separation."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 2px 12px rgba(0, 0, 0, 0.08)",
+        "purpose": "Goods card hover lift."
+      },
+      {
+        "name": "modal-lift",
+        "value": "0 8px 32px rgba(0, 0, 0, 0.12)",
+        "purpose": "Login card and elevated overlays."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-card",
+        "value": "transform 0.2s ease, box-shadow 0.2s ease",
+        "purpose": "Goods card hover lift."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default Ant Design state transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "480px" },
+      { "name": "sm", "value": "576px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "992px" },
+      { "name": "xl", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA — login submit, checkout confirm.",
+      "html": "<button class=\"ds-btn-primary\">登录</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 40px; padding: 8px 16px; background: #1677ff; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 16px; font-weight: 400; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #4096ff; } .ds-btn-primary:focus-visible { outline: 2px solid #1677ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary header action — 发布.",
+      "html": "<button class=\"ds-btn-ghost\"><span class=\"ds-btn-ghost-icon\">+</span> 发布</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 4px 15px; background: transparent; color: #1677ff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; border: 1px solid #1677ff; border-radius: 8px; cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; } .ds-btn-ghost:hover { color: #4096ff; border-color: #4096ff; background: #e6f4ff; } .ds-btn-ghost:focus-visible { outline: 2px solid #1677ff; outline-offset: 2px; } .ds-btn-ghost-icon { font-size: 14px; font-weight: 600; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Home hero search — large, with prefix icon area.",
+      "html": "<div class=\"ds-search-wrap\"><span class=\"ds-search-icon\">⌕</span><input class=\"ds-search-input\" type=\"search\" placeholder=\"搜索商品...\" /><button class=\"ds-search-btn\">搜索</button></div>",
+      "css": ".ds-search-wrap { display: flex; align-items: stretch; max-width: 480px; background: #ffffff; border: 1px solid #d9d9d9; border-radius: 8px; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; } .ds-search-wrap:focus-within { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1); } .ds-search-icon { display: flex; align-items: center; padding: 0 12px; color: #666666; font-size: 16px; } .ds-search-input { flex: 1; border: none; outline: none; padding: 8px 0; font-size: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #1f1f1f; background: transparent; } .ds-search-input::placeholder { color: #666666; } .ds-search-btn { border: none; background: #1677ff; color: #ffffff; padding: 0 20px; font-size: 16px; cursor: pointer; transition: background 0.2s; } .ds-search-btn:hover { background: #4096ff; }"
+    },
+    {
+      "name": "Goods Card",
+      "kind": "card",
+      "refersTo": "card-goods",
+      "description": "Home grid item — image, title, price, seller.",
+      "html": "<article class=\"ds-goods-card\"><div class=\"ds-goods-cover\"><div class=\"ds-goods-placeholder\">📷</div></div><div class=\"ds-goods-body\"><h3 class=\"ds-goods-title\">二手高等数学教材 九成新</h3><div class=\"ds-goods-meta\"><span class=\"ds-goods-price\">¥25</span><span class=\"ds-goods-seller\">zhang_san</span></div></div></article>",
+      "css": ".ds-goods-card { background: #ffffff; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: none; } .ds-goods-card:hover { transform: translateY(-4px); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); } .ds-goods-cover { aspect-ratio: 1; background: linear-gradient(135deg, #e6f4ff 0%, #f0f5ff 100%); display: flex; align-items: center; justify-content: center; } .ds-goods-placeholder { font-size: 48px; color: #91caff; opacity: 0.8; } .ds-goods-body { padding: 12px 16px 16px; } .ds-goods-title { margin: 0 0 8px; font-size: 14px; font-weight: 400; color: #1f1f1f; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .ds-goods-meta { display: flex; justify-content: space-between; align-items: center; } .ds-goods-price { color: #ff4d4f; font-size: 18px; font-weight: 700; } .ds-goods-seller { color: #666666; font-size: 12px; }"
+    },
+    {
+      "name": "Nav Brand",
+      "kind": "nav",
+      "refersTo": "button-ghost",
+      "description": "Header brand lockup — icon + 校园二手.",
+      "html": "<a class=\"ds-nav-brand\" href=\"#\"><span class=\"ds-nav-brand-icon\">🛒</span><span class=\"ds-nav-brand-text\">校园二手</span></a>",
+      "css": ".ds-nav-brand { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; } .ds-nav-brand-icon { font-size: 24px; color: #1677ff; line-height: 1; } .ds-nav-brand-text { font-size: 18px; font-weight: 700; color: #1f1f1f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; } .ds-nav-brand:hover .ds-nav-brand-text { color: #1677ff; }"
+    },
+    {
+      "name": "Status Tag",
+      "kind": "chip",
+      "refersTo": "card-goods",
+      "description": "Sold overlay on goods card.",
+      "html": "<span class=\"ds-tag-sold\">已售</span>",
+      "css": ".ds-tag-sold { display: inline-block; padding: 2px 8px; font-size: 12px; color: #1f1f1f; background: rgba(255, 255, 255, 0.92); border: 1px solid #f0f0f0; border-radius: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; }"
+    },
+    {
+      "name": "Hero Banner",
+      "kind": "custom",
+      "refersTo": "card-goods",
+      "description": "Home page search hero — one gradient band per page.",
+      "html": "<section class=\"ds-hero\"><h2 class=\"ds-hero-title\">发现校园好物</h2><p class=\"ds-hero-sub\">二手书籍、数码、生活用品，应有尽有</p></section>",
+      "css": ".ds-hero { background: linear-gradient(135deg, #1677ff, #4096ff); border-radius: 16px; padding: 40px; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; } .ds-hero-title { margin: 0 0 8px; font-size: 28px; font-weight: 600; line-height: 1.3; color: #ffffff; } .ds-hero-sub { margin: 0 0 20px; font-size: 16px; opacity: 0.9; }"
+    },
+    {
+      "name": "Chat Bubble (Sent)",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "User message bubble in chat view.",
+      "html": "<div class=\"ds-chat-sent\">你好，这个还在吗？</div>",
+      "css": ".ds-chat-sent { display: inline-block; max-width: 70%; padding: 10px 14px; background: #1677ff; color: #ffffff; border-radius: 12px; font-size: 14px; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Campus Bulletin Board",
+    "overview": "This system treats the app as a digital campus bulletin board — upgraded for mobile, but still local, approachable, and full of discovery. Like 闲鱼's familiar second-hand rhythm, scoped to one school community. Surfaces are friendly and efficient: rounded cards, clear prices, obvious next actions.",
+    "keyCharacteristics": [
+      "Campus-local trust — seller names, order status, and chat are first-class",
+      "Friendly & efficient — Ant Design Vue with 12px card radius and hover lift",
+      "Hybrid elevation — sticky header shadow; cards lift on hover",
+      "Warm evolution path — blue is transitional toward Warm Campus Teal",
+      "Energy without noise — one hero gradient per page maximum"
+    ],
+    "rules": [
+      {
+        "name": "The Warm Campus Teal Rule",
+        "body": "The primary accent is transitioning from Ant Design blue (#1677ff) toward a warmer teal-green that reads campus not enterprise SaaS.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Promo Surface Rule",
+        "body": "Full-width gradient hero banners appear once per page. No countdown timers, no screaming red sale strips.",
+        "section": "colors"
+      },
+      {
+        "name": "The Chinese-First Rule",
+        "body": "All UI copy is Chinese. Never below 16px for primary interactive labels on mobile.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-Until-Touch Rule",
+        "body": "Surfaces do not carry shadow at rest except the header. Depth appears on hover, focus, or modal elevation.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use --bg-page (#f0f2f5) behind white content surfaces for clear tonal layering.",
+      "Do show seller username and price on every goods card — trust through clarity.",
+      "Do keep primary flows reachable within the top nav and obvious CTAs.",
+      "Do use hover lift on interactive cards only.",
+      "Do maintain WCAG 2.1 AA contrast.",
+      "Do honor prefers-reduced-motion when adding animations."
+    ],
+    "donts": [
+      "Don't use 廉价电商风: full-screen promotions, screaming red/yellow sale banners, countdown timers, fake urgency, cluttered category grids.",
+      "Don't ship Generic Ant Design defaults as the final identity.",
+      "Don't use SaaS marketing clichés: hero metrics, gradient text, glass cards, numbered section eyebrows.",
+      "Don't add side-stripe borders on cards or alerts.",
+      "Don't nest cards inside cards.",
+      "Don't use Deal Red as large background fills.",
+      "Don't add gradient hero bands to every page."
+    ]
+  }
+}

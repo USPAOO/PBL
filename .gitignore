@@ -1,0 +1,12 @@
+node_modules/
+uploads/
+.env
+.DS_Store
+
+# Agent / IDE skill copies (not app source)
+.agents/
+.claude/
+.cursor/
+.codex/
+.gemini/
+.kiro/
