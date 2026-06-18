@@ -340,13 +340,15 @@ Express 作为轻量级 Web 框架，负责注册全部 `/api/*` 路由，并将
 
 **注册**
 
-- 用户填写用户名与密码，调用 `POST /api/register` 写入 `users` 表
-- 注册成功后提示用户切换至登录
-- 用户名长度前端限制 32 字符
+- 独立注册页 `/register`，与登录页风格一致（Warm Campus Teal 卡片）
+- 字段：用户名（3-32 位）、密码（≥6 位）、确认密码、用户协议勾选
+- 密码强度可视化指示；用户名格式与唯一性后端校验
+- 注册成功后自动登录并跳转首页
 
 **登录**
 
-- 校验用户名与密码，成功返回用户对象（含 id、username、avatar）
+- 校验用户名与密码，成功返回用户对象（含 id、username、avatar、role、status）
+- 禁用账号（status=0）拒绝登录
 - 前端将用户信息写入 Pinia Store 及 `localStorage`
 - 支持登录后跳转至登录前访问的页面（`redirect` 参数）
 
@@ -676,6 +678,60 @@ HomeView → api.getGoods() → Express → MySQL goods JOIN users
 
 ---
 
+### 4.9 管理员后台模块
+
+#### 4.9.1 功能描述
+
+为平台运营人员提供商品监管、用户管理与通知发布能力。管理员通过 `users.role=1` 标识，默认账号 `admin` / `admin123`。
+
+#### 4.9.2 功能细节
+
+**访问控制**
+
+- 路由 `/admin/*` 需 `requiresAdmin` 守卫
+- 后端所有 `/api/admin/*` 接口校验 `admin_id` 对应用户 role=1
+
+**数据概览**（`/admin`）
+
+- 展示注册用户、在售商品、订单总数、有效通知数
+
+**商品管理**（`/admin/goods`）
+
+- 全平台商品列表，支持关键词与状态筛选
+- 强制下架（status=3，前台不可见）
+- 恢复上架（status=1）
+
+**用户管理**（`/admin/users`）
+
+- 用户列表：角色、状态、注册时间
+- 禁用/启用普通用户（不可禁用管理员或自己）
+
+**平台通知**（`/admin/notifications`）
+
+- 创建/编辑/删除通知
+- 类型：info、announcement、warning
+- `is_active` 控制是否对用户展示
+
+**布局**
+
+- `AdminLayout`：左侧导航 + 顶栏，与前台共用 Warm Campus Teal 设计令牌
+
+---
+
+### 4.10 平台通知模块
+
+#### 4.10.1 功能描述
+
+管理员发布的平台级公告，在首页顶部以 Alert 形式展示，用户可关闭。
+
+#### 4.10.2 功能细节
+
+- 用户端 `GET /api/notifications` 返回 `is_active=1` 的通知
+- 首页按类型显示不同 Alert 样式
+- 关闭仅影响当前会话展示（前端 dismiss）
+
+---
+
 ## 五、核心业务流程
 
 ### 5.1 完整购物流程
@@ -760,6 +816,11 @@ HomeView → api.getGoods() → Express → MySQL goods JOIN users
 | 上传 | POST | /api/upload | 单文件 |
 | 上传 | POST | /api/upload/multiple | 多文件 |
 | 智能体 | POST | /api/shopping-agent/chat | 对话 |
+| 通知 | GET | /api/notifications | 用户端通知 |
+| 管理 | GET | /api/admin/stats | 概览 |
+| 管理 | GET/PUT | /api/admin/users、/users/:id/status | 用户管理 |
+| 管理 | GET/PUT/DELETE | /api/admin/goods | 商品管理 |
+| 管理 | CRUD | /api/admin/notifications | 通知管理 |
 
 ---
 
@@ -772,6 +833,8 @@ HomeView → api.getGoods() → Express → MySQL goods JOIN users
 | 完整交易闭环 | 覆盖发布→浏览→加购→下单→履约全流程 |
 | 实时聊天 | Socket.IO 推送，买卖沟通无需离开平台 |
 | AI 购物助手 | 内置规则 + 可扩展外部 LLM，智能推荐与问答 |
+| 管理员后台 | 商品监管、用户禁用、平台通知发布 |
+| 独立注册体验 | 专用注册页，密码强度与协议校验 |
 | 多卖家拆单 | 购物车跨卖家自动拆分订单，符合 C2C 交易逻辑 |
 | 前后端分离 | 清晰分层，便于独立开发、测试与部署 |
 

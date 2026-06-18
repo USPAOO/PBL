@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { SearchOutlined, PictureOutlined } from '@ant-design/icons-vue';
+import { SearchOutlined, PictureOutlined, NotificationOutlined } from '@ant-design/icons-vue';
 import { api, assetUrl } from '../api';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
@@ -10,9 +10,38 @@ import SafeImage from '../components/SafeImage.vue';
 
 const router = useRouter();
 const goods = ref<any[]>([]);
+const notifications = ref<any[]>([]);
+const dismissedIds = ref<number[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const keyword = ref('');
+
+const visibleNotifications = ref<any[]>([]);
+
+async function loadNotifications() {
+  try {
+    const res = await api.getNotifications();
+    if (res.data.code === 200) {
+      notifications.value = res.data.data;
+      visibleNotifications.value = res.data.data.filter(
+        (n: any) => !dismissedIds.value.includes(n.id)
+      );
+    }
+  } catch { /* non-blocking */ }
+}
+
+function dismissNotification(id: number) {
+  dismissedIds.value.push(id);
+  visibleNotifications.value = notifications.value.filter(
+    n => !dismissedIds.value.includes(n.id)
+  );
+}
+
+function notifColor(type: string) {
+  if (type === 'warning') return 'warning';
+  if (type === 'announcement') return 'success';
+  return 'info';
+}
 
 async function loadGoods() {
   loading.value = true;
@@ -32,11 +61,30 @@ function getCover(item: any) {
   return item.images?.[0] ? assetUrl(item.images[0]) : '';
 }
 
-onMounted(loadGoods);
+onMounted(() => {
+  loadGoods();
+  loadNotifications();
+});
 </script>
 
 <template>
   <div class="page-container">
+    <div v-if="visibleNotifications.length" class="notif-stack">
+      <a-alert
+        v-for="n in visibleNotifications"
+        :key="n.id"
+        :type="notifColor(n.type)"
+        show-icon
+        closable
+        class="notif-item"
+        @close="dismissNotification(n.id)"
+      >
+        <template #icon><NotificationOutlined /></template>
+        <template #message>{{ n.title }}</template>
+        <template #description>{{ n.content }}</template>
+      </a-alert>
+    </div>
+
     <div class="hero-banner">
       <div class="hero-content">
         <h2>发现校园好物</h2>
@@ -97,6 +145,17 @@ onMounted(loadGoods);
 </template>
 
 <style scoped>
+.notif-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.notif-item {
+  border-radius: var(--radius-md);
+}
+
 .hero-banner {
   background: linear-gradient(135deg, var(--primary), var(--primary-mid));
   border-radius: var(--radius-xl);

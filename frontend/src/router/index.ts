@@ -11,6 +11,23 @@ const router = createRouter({
       meta: { guest: true },
     },
     {
+      path: '/register',
+      name: 'Register',
+      component: () => import('../views/RegisterView.vue'),
+      meta: { guest: true },
+    },
+    {
+      path: '/admin',
+      component: () => import('../layouts/AdminLayout.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        { path: '', name: 'AdminDashboard', component: () => import('../views/admin/AdminDashboardView.vue') },
+        { path: 'goods', name: 'AdminGoods', component: () => import('../views/admin/AdminGoodsView.vue') },
+        { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/AdminUsersView.vue') },
+        { path: 'notifications', name: 'AdminNotifications', component: () => import('../views/admin/AdminNotificationsView.vue') },
+      ],
+    },
+    {
       path: '/',
       component: () => import('../layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
@@ -37,6 +54,8 @@ router.beforeEach((to, _from, next) => {
   const userStore = useUserStore();
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next({ name: 'Login', query: { redirect: to.fullPath } });
+  } else if (to.meta.requiresAdmin && !userStore.isAdmin) {
+    next({ name: 'Home' });
   } else if (to.meta.guest && userStore.isLoggedIn) {
     next({ name: 'Home' });
   } else {

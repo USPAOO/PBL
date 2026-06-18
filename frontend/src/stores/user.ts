@@ -5,12 +5,15 @@ export interface User {
   id: number;
   username: string;
   avatar?: string;
+  role?: number;
+  status?: number;
 }
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null);
 
   const isLoggedIn = computed(() => !!user.value);
+  const isAdmin = computed(() => user.value?.role === 1);
 
   function init() {
     const saved = localStorage.getItem('user');
@@ -27,5 +30,5 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('user');
   }
 
-  return { user, isLoggedIn, init, setUser, logout };
+  return { user, isLoggedIn, isAdmin, init, setUser, logout };
 });

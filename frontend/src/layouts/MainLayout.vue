@@ -4,7 +4,8 @@ import { useRouter, useRoute } from 'vue-router';
 import {
   HomeOutlined, ShoppingCartOutlined, ShoppingOutlined,
   MessageOutlined, RobotOutlined, PlusCircleOutlined,
-  UserOutlined, LogoutOutlined, UnorderedListOutlined, MenuOutlined
+  UserOutlined, LogoutOutlined, UnorderedListOutlined, MenuOutlined,
+  SettingOutlined,
 } from '@ant-design/icons-vue';
 import { useUserStore } from '../stores/user';
 import { useCartStore } from '../stores/cart';
@@ -31,7 +32,7 @@ const selectedKeys = computed(() => {
 const cartCount = computed(() => cartStore.items.length);
 
 const hideBottomNav = computed(() =>
-  route.path === '/checkout' || route.path.startsWith('/login')
+  route.path === '/checkout' || route.path.startsWith('/login') || route.path.startsWith('/register')
 );
 
 const bottomNavItems = [
@@ -107,6 +108,9 @@ function logout() {
             </a>
             <template #overlay>
               <a-menu>
+                <a-menu-item v-if="userStore.isAdmin" @click="router.push('/admin')">
+                  <SettingOutlined /> 管理后台
+                </a-menu-item>
                 <a-menu-item @click="router.push('/agent')">购物助手</a-menu-item>
                 <a-menu-item @click="router.push('/orders')">我的订单</a-menu-item>
                 <a-menu-divider />
@@ -134,6 +138,10 @@ function logout() {
         <a-menu-item key="publish" @click="navigate('/publish')">
           <PlusCircleOutlined />
           <span>发布商品</span>
+        </a-menu-item>
+        <a-menu-item v-if="userStore.isAdmin" key="admin" @click="navigate('/admin')">
+          <SettingOutlined />
+          <span>管理后台</span>
         </a-menu-item>
       </a-menu>
     </a-drawer>

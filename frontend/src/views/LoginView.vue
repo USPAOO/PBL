@@ -11,7 +11,6 @@ const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const loading = ref(false);
-const isRegister = ref(false);
 const form = ref({ username: '', password: '' });
 
 async function submit() {
@@ -21,30 +20,20 @@ async function submit() {
     message.warning('请填写用户名和密码');
     return;
   }
-  if (username.length > 32) {
-    message.warning('用户名不能超过 32 个字符');
-    return;
-  }
   if (loading.value) return;
   loading.value = true;
   try {
-    const fn = isRegister.value ? api.register : api.login;
-    const res = await fn({ username, password });
+    const res = await api.login({ username, password });
     if (res.data.code === 200) {
-      if (isRegister.value) {
-        message.success('注册成功，请登录');
-        isRegister.value = false;
-      } else {
-        userStore.setUser(res.data.data);
-        message.success('登录成功');
-        const redirect = (route.query.redirect as string) || '/';
-        router.push(redirect);
-      }
+      userStore.setUser(res.data.data);
+      message.success('登录成功');
+      const redirect = (route.query.redirect as string) || '/';
+      router.push(redirect);
     } else {
       message.error(res.data.msg);
     }
   } catch (e) {
-    message.error(getApiErrorMessage(e, isRegister.value ? '注册失败' : '登录失败'));
+    message.error(getApiErrorMessage(e, '登录失败'));
   } finally {
     loading.value = false;
   }
@@ -67,7 +56,6 @@ async function submit() {
             size="large"
             placeholder="请输入用户名"
             :maxlength="32"
-            show-count
             @press-enter="submit"
           >
             <template #prefix><UserOutlined /></template>
@@ -85,14 +73,12 @@ async function submit() {
           </a-input-password>
         </a-form-item>
         <a-button type="primary" html-type="submit" size="large" block :loading="loading">
-          {{ isRegister ? '注册' : '登录' }}
+          登录
         </a-button>
       </a-form>
 
       <div class="login-footer">
-        <a @click="isRegister = !isRegister">
-          {{ isRegister ? '已有账号？去登录' : '没有账号？去注册' }}
-        </a>
+        没有账号？<a @click="router.push('/register')">立即注册</a>
       </div>
     </div>
   </div>
@@ -101,11 +87,13 @@ async function submit() {
 <style scoped>
 .login-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  padding: var(--space-md);
 }
 
 .login-bg {
@@ -121,7 +109,7 @@ async function submit() {
 
 .login-card {
   position: relative;
-  width: min(420px, calc(100vw - 32px));
+  width: min(420px, 100%);
   padding: var(--space-xl) var(--space-lg);
   background: var(--surface);
   border-radius: var(--radius-xl);
@@ -137,6 +125,7 @@ async function submit() {
   font-size: 28px;
   margin: 0 0 8px;
   color: var(--text-primary);
+  text-wrap: balance;
 }
 
 .login-header p {
@@ -147,5 +136,6 @@ async function submit() {
 .login-footer {
   text-align: center;
   margin-top: 20px;
+  color: var(--text-secondary);
 }
 </style>

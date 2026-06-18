@@ -58,6 +58,14 @@ const ORDER_STATUS_TEXT = {
     4: '已取消'
 };
 
+const GOODS_STATUS_TEXT = {
+    1: '在售',
+    2: '已售',
+    3: '已下架'
+};
+
+const USER_ROLE = { USER: 0, ADMIN: 1 };
+
 function parseImages(images) {
     if (!images) return [];
     if (Array.isArray(images)) return images;
@@ -82,9 +90,38 @@ async function ensureTables() {
     for (const stmt of statements) {
         if (stmt) await pool.query(stmt);
     }
+    const alters = [
+        "ALTER TABLE users ADD COLUMN role tinyint NOT NULL DEFAULT 0 COMMENT '0用户 1管理员'",
+        "ALTER TABLE users ADD COLUMN status tinyint NOT NULL DEFAULT 1 COMMENT '1正常 0禁用'",
+        "ALTER TABLE users ADD COLUMN create_time datetime DEFAULT CURRENT_TIMESTAMP"
+    ];
+    for (const stmt of alters) {
+        try { await pool.query(stmt); } catch (_) { /* column exists */ }
+    }
+    await pool.query("UPDATE users SET role=1 WHERE username='admin'");
+    const [admins] = await pool.query("SELECT id FROM users WHERE role=1 LIMIT 1");
+    if (!admins.length) {
+        await pool.query(
+            "INSERT INTO users (username, password, avatar, role, status) VALUES ('admin', 'admin123', '', 1, 1)"
+        ).catch(() => {});
+    }
 }
 
 ensureTables().catch(err => console.warn('数据库迁移提示:', err.message));
+
+async function getUserById(id) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE id=?', [id]);
+    return rows[0] || null;
+}
+
+async function requireAdmin(adminId, res) {
+    const user = await getUserById(adminId);
+    if (!user || user.role !== USER_ROLE.ADMIN) {
+        res.json({ code: 403, msg: '无管理员权限' });
+        return null;
+    }
+    return user;
+}
 
 io.on('connection', (socket) => {
     socket.on('join', (userId) => {
@@ -95,9 +132,24 @@ io.on('connection', (socket) => {
 // ========== 用户 ==========
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        await pool.query('INSERT INTO users (username, password, avatar) VALUES (?, ?, ?)', [username, password, '']);
-        res.json({ code: 200, msg: '注册成功' });
+        const { username, password, confirm_password } = req.body;
+        const name = (username || '').trim();
+        if (!name || !password) return res.json({ code: 400, msg: '请填写用户名和密码' });
+        if (name.length < 3 || name.length > 32) return res.json({ code: 400, msg: '用户名长度需为 3-32 个字符' });
+        if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(name)) return res.json({ code: 400, msg: '用户名仅支持中文、字母、数字和下划线' });
+        if (password.length < 6) return res.json({ code: 400, msg: '密码至少 6 位' });
+        if (password.length > 64) return res.json({ code: 400, msg: '密码不能超过 64 位' });
+        if (confirm_password !== undefined && password !== confirm_password) return res.json({ code: 400, msg: '两次密码不一致' });
+
+        const [existing] = await pool.query('SELECT id FROM users WHERE username=?', [name]);
+        if (existing.length) return res.json({ code: 400, msg: '用户名已被占用' });
+
+        const [result] = await pool.query(
+            'INSERT INTO users (username, password, avatar, role, status) VALUES (?, ?, ?, 0, 1)',
+            [name, password, '']
+        );
+        const [rows] = await pool.query('SELECT id, username, avatar, role, status FROM users WHERE id=?', [result.insertId]);
+        res.json({ code: 200, msg: '注册成功', data: rows[0] });
     } catch (err) {
         res.json({ code: 500, msg: '注册失败: ' + err.message });
     }
@@ -106,12 +158,11 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const [rows] = await pool.query('SELECT * FROM users WHERE username=? AND password=?', [username, password]);
-        if (rows.length > 0) {
-            res.json({ code: 200, msg: '登录成功', data: rows[0] });
-        } else {
-            res.json({ code: 400, msg: '用户名或密码错误' });
-        }
+        const name = (username || '').trim();
+        const [rows] = await pool.query('SELECT id, username, avatar, role, status FROM users WHERE username=? AND password=?', [name, password]);
+        if (!rows.length) return res.json({ code: 400, msg: '用户名或密码错误' });
+        if (rows[0].status === 0) return res.json({ code: 403, msg: '账号已被禁用，请联系管理员' });
+        res.json({ code: 200, msg: '登录成功', data: rows[0] });
     } catch (err) {
         res.json({ code: 500, msg: '登录失败: ' + err.message });
     }
@@ -138,7 +189,7 @@ app.get('/api/goods', async (req, res) => {
             SELECT g.*, u.username, u.avatar
             FROM goods g
             LEFT JOIN users u ON g.user_id = u.id
-            WHERE 1=1
+            WHERE g.status != 3
         `;
         const params = [];
         if (status) { sql += ' AND g.status=?'; params.push(status); }
@@ -158,7 +209,7 @@ app.get('/api/goods/:id', async (req, res) => {
             FROM goods g LEFT JOIN users u ON g.user_id = u.id
             WHERE g.id=?
         `, [req.params.id]);
-        if (!rows.length) return res.json({ code: 404, msg: '商品不存在' });
+        if (!rows.length || rows[0].status === 3) return res.json({ code: 404, msg: '商品不存在或已下架' });
         res.json({ code: 200, msg: 'success', data: formatGoods(rows[0]) });
     } catch (err) {
         res.json({ code: 500, msg: '查询失败: ' + err.message });
@@ -540,6 +591,187 @@ app.post('/api/shopping-agent/chat', async (req, res) => {
         res.json({ code: 200, msg: 'success', data: { reply, source: 'builtin', recommendations: goodsList.filter(g => g.status === 1).slice(0, 3) } });
     } catch (err) {
         res.json({ code: 500, msg: '智能体回复失败: ' + err.message });
+    }
+});
+
+// ========== 平台通知（用户端） ==========
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT n.*, u.username as creator_name
+            FROM notifications n
+            LEFT JOIN users u ON n.created_by = u.id
+            WHERE n.is_active = 1
+            ORDER BY n.id DESC
+            LIMIT 20
+        `);
+        res.json({ code: 200, msg: 'success', data: rows });
+    } catch (err) {
+        res.json({ code: 500, msg: '查询失败: ' + err.message });
+    }
+});
+
+// ========== 管理员 ==========
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        const [[users]] = await pool.query('SELECT COUNT(*) as c FROM users');
+        const [[goods]] = await pool.query('SELECT COUNT(*) as c FROM goods WHERE status != 3');
+        const [[onSale]] = await pool.query('SELECT COUNT(*) as c FROM goods WHERE status = 1');
+        const [[orders]] = await pool.query('SELECT COUNT(*) as c FROM orders');
+        const [[notifications]] = await pool.query('SELECT COUNT(*) as c FROM notifications WHERE is_active = 1');
+        res.json({
+            code: 200, msg: 'success',
+            data: {
+                users: users.c,
+                goods: goods.c,
+                on_sale: onSale.c,
+                orders: orders.c,
+                notifications: notifications.c
+            }
+        });
+    } catch (err) {
+        res.json({ code: 500, msg: '查询失败: ' + err.message });
+    }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        const { keyword } = req.query;
+        let sql = 'SELECT id, username, avatar, role, status, create_time FROM users WHERE 1=1';
+        const params = [];
+        if (keyword) { sql += ' AND username LIKE ?'; params.push(`%${keyword}%`); }
+        sql += ' ORDER BY id DESC';
+        const [rows] = await pool.query(sql, params);
+        res.json({ code: 200, msg: 'success', data: rows });
+    } catch (err) {
+        res.json({ code: 500, msg: '查询失败: ' + err.message });
+    }
+});
+
+app.put('/api/admin/users/:id/status', async (req, res) => {
+    try {
+        const { admin_id, status } = req.body;
+        const admin = await requireAdmin(admin_id, res);
+        if (!admin) return;
+        const targetId = Number(req.params.id);
+        if (targetId === admin.id) return res.json({ code: 400, msg: '不能禁用自己' });
+        const [target] = await pool.query('SELECT role FROM users WHERE id=?', [targetId]);
+        if (target.length && target[0].role === USER_ROLE.ADMIN) return res.json({ code: 400, msg: '不能禁用管理员账号' });
+        await pool.query('UPDATE users SET status=? WHERE id=?', [status, targetId]);
+        res.json({ code: 200, msg: status === 1 ? '已启用账号' : '已禁用账号' });
+    } catch (err) {
+        res.json({ code: 500, msg: '操作失败: ' + err.message });
+    }
+});
+
+app.get('/api/admin/goods', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        const { keyword, status } = req.query;
+        let sql = `
+            SELECT g.*, u.username
+            FROM goods g LEFT JOIN users u ON g.user_id = u.id
+            WHERE 1=1
+        `;
+        const params = [];
+        if (status !== undefined && status !== '') { sql += ' AND g.status=?'; params.push(status); }
+        if (keyword) { sql += ' AND (g.content LIKE ? OR u.username LIKE ?)'; params.push(`%${keyword}%`, `%${keyword}%`); }
+        sql += ' ORDER BY g.id DESC';
+        const [rows] = await pool.query(sql, params);
+        const data = rows.map(r => ({ ...formatGoods(r), status_text: GOODS_STATUS_TEXT[r.status] || '未知' }));
+        res.json({ code: 200, msg: 'success', data });
+    } catch (err) {
+        res.json({ code: 500, msg: '查询失败: ' + err.message });
+    }
+});
+
+app.put('/api/admin/goods/:id', async (req, res) => {
+    try {
+        const { admin_id, status, content, price } = req.body;
+        if (!await requireAdmin(admin_id, res)) return;
+        const updates = [];
+        const params = [];
+        if (status !== undefined) { updates.push('status=?'); params.push(status); }
+        if (content !== undefined) { updates.push('content=?'); params.push(content); }
+        if (price !== undefined) { updates.push('price=?'); params.push(price); }
+        if (!updates.length) return res.json({ code: 400, msg: '无更新内容' });
+        params.push(req.params.id);
+        await pool.query(`UPDATE goods SET ${updates.join(', ')} WHERE id=?`, params);
+        res.json({ code: 200, msg: '更新成功' });
+    } catch (err) {
+        res.json({ code: 500, msg: '更新失败: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/goods/:id', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        await pool.query('UPDATE goods SET status=3 WHERE id=?', [req.params.id]);
+        res.json({ code: 200, msg: '商品已下架' });
+    } catch (err) {
+        res.json({ code: 500, msg: '操作失败: ' + err.message });
+    }
+});
+
+app.get('/api/admin/notifications', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        const [rows] = await pool.query(`
+            SELECT n.*, u.username as creator_name
+            FROM notifications n
+            LEFT JOIN users u ON n.created_by = u.id
+            ORDER BY n.id DESC
+        `);
+        res.json({ code: 200, msg: 'success', data: rows });
+    } catch (err) {
+        res.json({ code: 500, msg: '查询失败: ' + err.message });
+    }
+});
+
+app.post('/api/admin/notifications', async (req, res) => {
+    try {
+        const { admin_id, title, content, type = 'info', is_active = 1 } = req.body;
+        const admin = await requireAdmin(admin_id, res);
+        if (!admin) return;
+        if (!title?.trim() || !content?.trim()) return res.json({ code: 400, msg: '标题和内容不能为空' });
+        await pool.query(
+            'INSERT INTO notifications (title, content, type, is_active, created_by) VALUES (?, ?, ?, ?, ?)',
+            [title.trim(), content.trim(), type, is_active ? 1 : 0, admin.id]
+        );
+        res.json({ code: 200, msg: '通知已发布' });
+    } catch (err) {
+        res.json({ code: 500, msg: '发布失败: ' + err.message });
+    }
+});
+
+app.put('/api/admin/notifications/:id', async (req, res) => {
+    try {
+        const { admin_id, title, content, type, is_active } = req.body;
+        if (!await requireAdmin(admin_id, res)) return;
+        const updates = [];
+        const params = [];
+        if (title !== undefined) { updates.push('title=?'); params.push(title.trim()); }
+        if (content !== undefined) { updates.push('content=?'); params.push(content.trim()); }
+        if (type !== undefined) { updates.push('type=?'); params.push(type); }
+        if (is_active !== undefined) { updates.push('is_active=?'); params.push(is_active ? 1 : 0); }
+        if (!updates.length) return res.json({ code: 400, msg: '无更新内容' });
+        params.push(req.params.id);
+        await pool.query(`UPDATE notifications SET ${updates.join(', ')} WHERE id=?`, params);
+        res.json({ code: 200, msg: '更新成功' });
+    } catch (err) {
+        res.json({ code: 500, msg: '更新失败: ' + err.message });
+    }
+});
+
+app.delete('/api/admin/notifications/:id', async (req, res) => {
+    try {
+        if (!await requireAdmin(req.query.admin_id, res)) return;
+        await pool.query('DELETE FROM notifications WHERE id=?', [req.params.id]);
+        res.json({ code: 200, msg: '通知已删除' });
+    } catch (err) {
+        res.json({ code: 500, msg: '删除失败: ' + err.message });
     }
 });
 

@@ -18,7 +18,9 @@ export function assetUrl(path: string) {
 
 export const api = {
   login: (data: { username: string; password: string }) => http.post('/login', data),
-  register: (data: { username: string; password: string }) => http.post('/register', data),
+  register: (data: { username: string; password: string; confirm_password?: string }) => http.post('/register', data),
+
+  getNotifications: () => http.get('/notifications'),
 
   getGoods: (params?: { status?: number; keyword?: string }) => http.get('/goods', { params }),
   getGoodsDetail: (id: number) => http.get(`/goods/${id}`),
@@ -55,6 +57,23 @@ export const api = {
 
   agentChat: (data: { message: string; history?: { role: string; content: string }[] }) =>
     http.post('/shopping-agent/chat', data),
+
+  adminStats: (adminId: number) => http.get('/admin/stats', { params: { admin_id: adminId } }),
+  adminUsers: (adminId: number, params?: { keyword?: string }) =>
+    http.get('/admin/users', { params: { admin_id: adminId, ...params } }),
+  adminUpdateUserStatus: (id: number, data: { admin_id: number; status: number }) =>
+    http.put(`/admin/users/${id}/status`, data),
+  adminGoods: (adminId: number, params?: { keyword?: string; status?: string }) =>
+    http.get('/admin/goods', { params: { admin_id: adminId, ...params } }),
+  adminUpdateGoods: (id: number, data: object) => http.put(`/admin/goods/${id}`, data),
+  adminDeleteGoods: (id: number, adminId: number) =>
+    http.delete(`/admin/goods/${id}`, { params: { admin_id: adminId } }),
+  adminNotifications: (adminId: number) =>
+    http.get('/admin/notifications', { params: { admin_id: adminId } }),
+  adminCreateNotification: (data: object) => http.post('/admin/notifications', data),
+  adminUpdateNotification: (id: number, data: object) => http.put(`/admin/notifications/${id}`, data),
+  adminDeleteNotification: (id: number, adminId: number) =>
+    http.delete(`/admin/notifications/${id}`, { params: { admin_id: adminId } }),
 };
 
 export default http;
